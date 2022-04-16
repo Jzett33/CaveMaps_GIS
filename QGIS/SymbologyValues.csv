@@ -1,0 +1,32 @@
+Geometry,Coded Value,Type
+Line,1,Floor Change
+Line,2,Ceiling Change
+Line,3,Ceiling Channel
+Line,4,Cross Section Location
+Line,5,Floor Channel
+Line,6,Lower Level
+Line,7,Stream Flow
+Line,8,Approximate Passage
+Line,9,Upper Level
+Line,10,Wall
+Point,101,Ceiling Height
+Point,102,Column
+Point,103,Datum
+Point,104,Elevation Above Datum
+Point,105,Elevation Below Datum
+Point,106,Flowstone
+Point,107,Large Breakdown
+Point,108,Pit Depth
+Point,109,Slope
+Point,110,Small Breakdown
+Point,111,Soda Straws
+Point,112,Stalactite
+Point,113,Stalagmite
+Point,114,Organic Debris
+Point,115,Cross Section Label
+Polygon,1,Bedrock Pillar
+Polygon,2,Clay/Silt
+Polygon,3,Cobbles
+Polygon,4,Rock
+Polygon,5,Sand
+Polygon,6,Water
