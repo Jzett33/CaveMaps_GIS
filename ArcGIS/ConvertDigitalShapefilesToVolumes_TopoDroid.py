@@ -11,7 +11,7 @@ Jon R Zetterberg
 jzett33@gmail.com
 NSS67484
 
-Last modified: 20220323
+Last modified: 20220417
 
 Input 0 is a folder containing the output Therion shots3d and stations3d shapefiles.
 Input 1 is the coordinate reference system which the shapefiles reference.
@@ -154,10 +154,10 @@ arcpy.Delete_management(longSC)
 #Create additional features in the geodatabase to be used as templates in map production
 if newAppend == "Yes":
     #Generate domains that will be used in map production
-    arcpy.CreateDomain_management(fileGDB, "PointTypes", "", "TEXT")
-    arcpy.CreateDomain_management(fileGDB, "LineTypes", "", "TEXT")
-    arcpy.CreateDomain_management(fileGDB, "PolygonTypes", "", "TEXT")
-    arcpy.CreateDomain_management(fileGDB, "TrueFalse", "", "TEXT")
+    arcpy.CreateDomain_management(fileGDB, "PointTypes", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
+    arcpy.CreateDomain_management(fileGDB, "LineTypes", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
+    arcpy.CreateDomain_management(fileGDB, "PolygonTypes", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
+    arcpy.CreateDomain_management(fileGDB, "TrueFalse", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
     domDict1 = {"30":"Flowstone", "31":"Stalagmite", "32":"Stalactite", "33":"Column",
                 "34":"Soda Straw", "20":"Drop", "21":"Ceiling", "41":"Rock",
                 "40":"Slope", "10":"Datum", "11":"Tree", "12":"XS Label",

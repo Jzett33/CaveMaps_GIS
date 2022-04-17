@@ -32,15 +32,11 @@ import arcpy
 import os
 """
 thFolder = arcpy.GetParameterAsText(0) #The folder containing the output shapefiles from Therion
-textfile = arcpy.GetParameterAsText(1)  #the zed file generated from Excel
-crs = arcpy.GetParameterAsText(2)      #coordinate reference system that the Therion files use
-createProfile = arcpy.GetParameterAsText(3) #Does a profile need to be processed from the specified text file (Yes or No)
-newAppend = arcpy.GetParameterAsText(4)#Do mapping layers need to be created (Yes or No)
+crs = arcpy.GetParameterAsText(1)      #coordinate reference system that the Therion files use
+newAppend = arcpy.GetParameterAsText(2)#Do mapping layers need to be created (Yes or No)
 """
-thFolder = "C:\\Users\\JONZET\\Documents\\Data\\Maps\\SaucerfullOfSecret\\Notes\\SurveyData\\Saucer\\"
-textfile = "C:\\Users\\JONZET\\Documents\\Data\\Maps\\SaucerfullOfSecret\\Notes\\SurveyData\\Saucer_Profile.txt"
+thFolder = "C:\\Users\\JONZET\\Documents\\Data\\Maps\\MissedPit\\Notes\\SurveyData\\MissedPit\\"
 crs = arcpy.SpatialReference(26916)
-createProfile = "Yes"
 newAppend = "Yes"
 
 arcpy.env.workspace = thFolder
@@ -84,8 +80,6 @@ arcpy.CreateFeatureDataset_management(fileGDB, "TempSplays", crs)
 tSplays = os.path.join(fileGDB, "TempSplays")
 arcpy.CreateFeatureDataset_management(fileGDB, "LongShotCheck", crs)
 longSC = os.path.join(fileGDB, "LongShotCheck")
-arcpy.CreateFeatureDataset_management(fileGDB, "Profile", crs)
-ProfileFD = os.path.join(fileGDB, "Profile")
 
 #Check for long shots, delete if any are found
 staLSC = arcpy.FeatureClassToFeatureClass_conversion(stations, longSC, "Stations_LSC")
@@ -141,23 +135,6 @@ arcpy.Delete_management(tVols)
 arcpy.Delete_management(tSplays)
 arcpy.Delete_management(splays)
 arcpy.Delete_management(longSC)
-
-#Create profile survey, ceiling, and floor lines
-if createProfile == "YES":
-    createProfile = "Yes"
-if createProfile == "yes":
-    createProfile = "Yes"
-if createProfile == "y":
-    createProfile = "Yes"
-if createProfile == "Y":
-    createProfile = "Yes"
-if createProfile == "Yes":
-    print("Generating Profile Survey, Ceiling, and Floor Lines")
-    arcpy.env.workspace = ProfileFD
-    #Generate the profile survey stations and line
-    ProSurveyPnts_Event = arcpy.MakeXYEventLayer_management(textfile, "Pro_X", "Pro_Y", "Points_SurveyProfile", crs)
-    ProSurveyPnts = arcpy.FeatureClassToFeatureClass_conversion(ProSurveyPnts_Event, ProfileFD, "ProfileSurveyPoints")
-    ProLn = arcpy.PointsToLine_management(ProSurveyPnts, "ProfileSurveyLine", "Line", "Sort")
 
 #Create additional features in the geodatabase to be used as templates in map production
 if newAppend == "YES":
