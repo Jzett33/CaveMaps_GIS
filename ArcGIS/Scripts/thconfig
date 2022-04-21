@@ -1,4 +1,4 @@
 encoding  utf-8
-source Lot41Cave.th
+source CaveName.th
 
-export model -format esri -output Lot41Cave
+export model -format esri -output CaveName
