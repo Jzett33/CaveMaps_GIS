@@ -24,10 +24,10 @@ Point,112,Stalactite
 Point,113,Stalagmite
 Point,114,Organic Debris
 Point,115,Cross Section Label
-Polygon,1,Bedrock Pillar
-Polygon,2,Clay/Silt
-Polygon,3,Cobbles
-Polygon,4,Rock
-Polygon,5,Sand
-Polygon,6,Water
-Polygon,7,Formation
+Polygon,201,Bedrock Pillar
+Polygon,202,Clay/Silt
+Polygon,203,Cobbles
+Polygon,204,Rock
+Polygon,205,Sand
+Polygon,206,Water
+Polygon,207,Formation
