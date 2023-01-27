@@ -1,0 +1,52 @@
+Preform Cave Survey
+#Jon Zetterberg 20230126
+#Survey without publication is still vandalism
+for Collect Survey Data:
+    if Sketch = "Digital":
+        Instrument = "Disto X2" OR Instrument = "BRIC4"
+        #Disto X2 is preferred
+        if Book = "Lenovo Tab 410":
+            Comfortable passage will be surveyed
+            10 inch Android tablet
+        elif Book = "Motorola G Pure":
+            Smaller device needed
+            6.5 inch Android phone
+        if Application = "TopoDroid":
+            Export Data Format = Therion #.th
+            Export Sketch Format = DXF #.dxf
+        elif Application = "Qave"
+            Export Data Format = Therion #.th
+            Export Sketch Format = SVG #.svg
+        elif Application = "SextTopo":
+            #less familiar with process
+            Export Data Format = Therion #.th
+            Export Sketch Format = SVG #.svg
+    elif Sketch = "Paper"
+        Instrument = "Disto X2" OR Instrument = "BRIC4"
+        #Disto X2 is preferred
+        Book = "Rite in the Rain"
+        if Paper = "Standard":
+            Survey normal conditions
+        elif Paper = "DuraRite":
+            Very wet conditions expected
+for Process Data:
+    if Sketch = "Digital":
+        open Therion
+            convert survey data to shapefiles #.shp
+        run Python script in ArcGIS Pro
+            linepolot files are generated
+        if Application = "Qave" OR Application = "SexyTopo":
+            open Inkscape
+                convert SVG to DXF
+    elif Sketch = "Paper":
+        open Excel
+            add survey data to excel and run macros
+        run Python script in ArcGIS Pro
+            linepolot files are generated
+for Map Production:
+    open ArcGIS Pro OR QGIS
+        add lineplot data
+        georeference sketches
+        use template data to digitize features
+        generate layout
+        export final map
