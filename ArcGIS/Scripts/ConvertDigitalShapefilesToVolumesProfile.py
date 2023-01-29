@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Convert Therion Export Shapefiles to Volumes using ArcGIS Pro
-Developed using Therion 5.5.3 and ArcGIS Pro 2.9.0
+Developed using Therion 5.5.3 and ArcGIS Pro 2.9.5
 
 There is a known difference between versions 2.8 and 2.9 where the Spatial Outlier Detection
     tool generates a field called NTHDIST instead of LOF which is used in this script
@@ -10,7 +10,7 @@ Jon R Zetterberg
 jzett33@gmail.com
 NSS67484
 
-Last modified: 20220417
+Last modified: 20221113
 
 Input 0 is a folder containing the output Therion shots3d and stations3d shapefiles.
 Input 1 is the coordinate reference system which the shapefiles reference.
@@ -36,12 +36,14 @@ textfile = arcpy.GetParameterAsText(1)  #the zed file generated from Excel
 crs = arcpy.GetParameterAsText(2)      #coordinate reference system that the Therion files use
 createProfile = arcpy.GetParameterAsText(3) #Does a profile need to be processed from the specified text file (Yes or No)
 newAppend = arcpy.GetParameterAsText(4)#Do mapping layers need to be created (Yes or No)
+createLeads = arcpy.GetParameterAsText(5) #Should a leads layer be generated (Yes or No)
 """
-thFolder = "C:\\Users\\JONZET\\Documents\\Data\\Maps\\SaucerfullOfSecret\\Notes\\SurveyData\\Saucer\\"
-textfile = "C:\\Users\\JONZET\\Documents\\Data\\Maps\\SaucerfullOfSecret\\Notes\\SurveyData\\Saucer_Profile.txt"
+thFolder = "C:\\CaveName\\"
+textfile = "C:\\TherionProfile.txt"
 crs = arcpy.SpatialReference(26916)
 createProfile = "Yes"
 newAppend = "Yes"
+createLeads = "No"
 
 arcpy.env.workspace = thFolder
 arcpy.env.overwriteOutput = True
@@ -50,6 +52,7 @@ shots = os.path.join(thFolder, "shots3d.shp")
 stations = os.path.join(thFolder, "stations3d.shp")
 
 #Create file geodatabase to store features
+print("Reformatting Survey Data")
 arcpy.CreateFileGDB_management(thFolder, "Workspace.gdb")
 fileGDB = os.path.join(thFolder, "Workspace.gdb")
 arcpy.env.workspace = fileGDB
@@ -84,14 +87,13 @@ arcpy.CreateFeatureDataset_management(fileGDB, "TempSplays", crs)
 tSplays = os.path.join(fileGDB, "TempSplays")
 arcpy.CreateFeatureDataset_management(fileGDB, "LongShotCheck", crs)
 longSC = os.path.join(fileGDB, "LongShotCheck")
-arcpy.CreateFeatureDataset_management(fileGDB, "Profile", crs)
-ProfileFD = os.path.join(fileGDB, "Profile")
 
 #Check for long shots, delete if any are found
+print("Checking for longshots")
 staLSC = arcpy.FeatureClassToFeatureClass_conversion(stations, longSC, "Stations_LSC")
 staLSCPath = fr"{longSC}\Stations_LSC_Values"
-outliers = arcpy.stats.SpatialOutlierDetection(staLSC, staLSCPath, "10")
-excldedShots = arcpy.FeatureClassToFeatureClass_conversion(outliers, surveyData, "ExcludedShots", '"NTHDIST" > 3')
+outliers = arcpy.stats.SpatialOutlierDetection(staLSC, staLSCPath)
+excldedShots = arcpy.FeatureClassToFeatureClass_conversion(outliers, surveyData, "ExcludedShots", '"NTHDIST" > 11')
 stationsLYR_LSC = arcpy.MakeFeatureLayer_management(stations, "stationsLYR_LSC")
 arcpy.SelectLayerByLocation_management("stationsLYR_LSC", "INTERSECT_3D", excldedShots)
 arcpy.DeleteFeatures_management(stationsLYR_LSC)
@@ -102,6 +104,7 @@ arcpy.Delete_management(staLSC)
 arcpy.Delete_management(outliers)
 
 #Seperate splay shots out from the center line
+print("Attributing splay shots")
 splays = arcpy.FeatureClassToFeatureClass_conversion(shots, fileGDB, "SplayShots", '"_SPLAY" = 1')
 arcpy.SplitByAttributes_analysis(splays, tSplays, "_From")
 splayList = arcpy.ListFeatureClasses("", "", "TempSplays")
@@ -121,6 +124,7 @@ arcpy.CalculateField_management(mergedPoints, "StaInt", '!FromSta!.replace("T", 
 dissolvePath = fr"{tPnts}\DissolvedPoints"
 dissolvedPnts = arcpy.Dissolve_management(mergedPoints, dissolvePath, ["StaInt"])
 
+print("Generating 3D passage models")
 arcpy.CalculateField_management(dissolvedPnts, "StationNumber", '!OBJECTID!', "PYTHON3", "", "SHORT")
 arcpy.CalculateField_management(dissolvedPnts, "Group1", '!StaInt! - ( !StaInt! % 2)', "PYTHON3", "", "SHORT")
 arcpy.CalculateField_management(dissolvedPnts, "Group2", '!StaInt! + ( !StaInt! % 2)', "PYTHON3", "", "SHORT")
@@ -153,6 +157,8 @@ if createProfile == "Y":
     createProfile = "Yes"
 if createProfile == "Yes":
     print("Generating Profile Survey, Ceiling, and Floor Lines")
+    arcpy.CreateFeatureDataset_management(fileGDB, "Profile", crs)
+    ProfileFD = os.path.join(fileGDB, "Profile")
     arcpy.env.workspace = ProfileFD
     #Generate the profile survey stations and line
     ProSurveyPnts_Event = arcpy.MakeXYEventLayer_management(textfile, "Pro_X", "Pro_Y", "Points_SurveyProfile", crs)
@@ -171,10 +177,10 @@ if newAppend == "Y":
 if newAppend == "Yes":
     print("Mapping feature classes creation started")
     #Generate domains that will be used in map production
-    arcpy.CreateDomain_management(fileGDB, "PointTypes", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
-    arcpy.CreateDomain_management(fileGDB, "LineTypes", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
-    arcpy.CreateDomain_management(fileGDB, "PolygonTypes", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
-    arcpy.CreateDomain_management(fileGDB, "TrueFalse", "", "TEXT", "", "DUPLICATE", "AREA_WEIGHTED")
+    arcpy.CreateDomain_management(fileGDB, "PointTypes", "Various symbology types for points.", "TEXT", "CODED", "DUPLICATE")
+    arcpy.CreateDomain_management(fileGDB, "LineTypes", "Various symbology types for lines.", "TEXT", "CODED", "DUPLICATE")
+    arcpy.CreateDomain_management(fileGDB, "PolygonTypes", "Various symbology types for polygons.", "TEXT", "CODED", "DUPLICATE")
+    arcpy.CreateDomain_management(fileGDB, "TrueFalse", "A simple true or false domain.", "TEXT", "CODED", "DUPLICATE")
     domDict1 = {"30":"Flowstone", "31":"Stalagmite", "32":"Stalactite", "33":"Column",
                 "34":"Soda Straw", "20":"Drop", "21":"Ceiling", "41":"Rock",
                 "40":"Slope", "10":"Datum", "11":"Tree", "12":"XS Label",
@@ -215,3 +221,30 @@ if newAppend == "Yes":
     arcpy.AddField_management(caveFeatPolygons, "Level", "SHORT")
     arcpy.AddField_management(caveFeatPolygons, "Shown", "TEXT", "", "", "5", "Point Type", "", "", "TrueFalse")
     print("Mapping feature classes creation completed")
+    #Create leads layer
+    if createLeads == "YES":
+        createLeads = "Yes"
+    if createLeads == "yes":
+        createLeads = "Yes"
+    if createLeads == "y":
+        createLeads = "Yes"
+    if createLeads == "Y":
+        createLeads = "Yes"
+    if createLeads == "Yes":
+        print("Generating Leads feature class")
+        arcpy.CreateDomain_management(fileGDB, "LeadStatus", "Options for the status of a lead.", "TEXT", "CODED", "DUPLICATE")
+        domDict5 = {"1":"Open", "2":"Resolved"}
+        for code in domDict5:
+            arcpy.AddCodedValueToDomain_management(fileGDB, "LeadStatus", code, domDict5[code])
+        caveFeatLeads = arcpy.CreateFeatureclass_management(caveFeat, "Leads", "POINT")
+        arcpy.AddField_management(caveFeatLeads, "ID_Num", "SHORT", "", "", "", "ID Number")
+        arcpy.AddField_management(caveFeatLeads, "Level", "SHORT")
+        arcpy.AddField_management(caveFeatLeads, "US_Station", "TEXT", "", "", "50", "US Station")
+        arcpy.AddField_management(caveFeatLeads, "DS_Station", "TEXT", "", "", "50", "DS Station")
+        arcpy.AddField_management(caveFeatLeads, "TieIn", "TEXT", "", "", "50", "Tie In Station")
+        arcpy.AddField_management(caveFeatLeads, "Area", "TEXT", "", "", "150")
+        arcpy.AddField_management(caveFeatLeads, "Comment", "TEXT", "", "", "254")
+        arcpy.AddField_management(caveFeatLeads, "Status", "TEXT", "", "", "50", "", "", "", "LeadStatus")
+        print("Leads feature class creation completed")
+
+print("Processing completed, hope things go well moving forward.")
