@@ -8,3 +8,5 @@ The purpose of this repository is to hold tools intended to ease the difficulty 
 Symbology based on the National Speleological Society Cave Map Symbols https://sacs.caves.org/resources/symbols-one-page.pdf
 
 Symbology based on the TopoDroid symbol set https://sites.google.com/site/speleoapps/home/topodroid/topodroid-v6?authuser=0
+
+Portions of symbology layers for ArcGIS based on the ESRI Caves Style available in ArcGIS Desktop: http://downloads.esri.com/support/documentation/ao_/Caves.pdf
