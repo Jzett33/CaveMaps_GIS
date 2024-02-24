@@ -3,16 +3,18 @@
   "version" : "2.9.0",
   "build" : 32739,
   "layers" : [
-    "CIMPATH=map1/polygons2.xml"
+    "CIMPATH=map/polygons2.xml"
   ],
   "layerDefinitions" : [
     {
       "type" : "CIMFeatureLayer",
       "name" : "Polygons",
-      "uRI" : "CIMPATH=map1/polygons2.xml",
+      "uRI" : "CIMPATH=map/polygons2.xml",
       "sourceModifiedTime" : {
-        "type" : "TimeInstant"
+        "type" : "TimeInstant",
+        "start" : 978307200000
       },
+      "metadataURI" : "CIMPATH=Metadata/4412f787f9283f7d9579b2ea354efc1e.xml",
       "useSourceMetadata" : true,
       "description" : "Polygons",
       "layerElevation" : {
@@ -37,10 +39,92 @@
         "type" : "CIMFeatureTable",
         "displayField" : "Shape_Length",
         "editable" : true,
+        "fieldDescriptions" : [
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "OBJECTID",
+            "fieldName" : "OBJECTID",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
+            },
+            "readOnly" : true,
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "Shape",
+            "fieldName" : "Shape",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "Shape_Length",
+            "fieldName" : "Shape_Length",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 6
+            },
+            "readOnly" : true,
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "Shape_Area",
+            "fieldName" : "Shape_Area",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 6
+            },
+            "readOnly" : true,
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "Polygon Type",
+            "fieldName" : "PolygonType",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "Level",
+            "fieldName" : "Level",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "Shown",
+            "fieldName" : "Shown",
+            "visible" : true,
+            "searchMode" : "Exact"
+          }
+        ],
         "dataConnection" : {
           "type" : "CIMFeatureDatasetDataConnection",
           "featureDataset" : "CaveFeatures",
-          "workspaceConnectionString" : "DATABASE=..\\..\\Maps\\ChickamaugaCave\\Notes\\SurveyData\\Master\\ChickamaugaCave_Mstr\\Workspace.gdb",
+          "workspaceConnectionString" : "DATABASE=..\\..\\..\\ChickamaugaCave\\ChickamaugaCave.gdb",
           "workspaceFactory" : "FileGDB",
           "dataset" : "Polygons",
           "datasetType" : "esriDTFeatureClass"
@@ -51,7 +135,7 @@
       "featureTemplates" : [
         {
           "type" : "CIMFeatureTemplate",
-          "name" : "Rock",
+          "name" : "Cave Outline",
           "tags" : "Polygon",
           "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
           "toolFilter" : [
@@ -63,7 +147,7 @@
             "type" : "PropertySet",
             "propertySetItems" : [
               "polygontype",
-              "blocks"
+              "outline"
             ]
           }
         },
@@ -87,24 +171,6 @@
         },
         {
           "type" : "CIMFeatureTemplate",
-          "name" : "Organic Debris",
-          "tags" : "Polygon",
-          "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
-          "toolFilter" : [
-            "6c6970a7-5ca9-448c-9c7d-0d716cd2ac64",
-            "a281e635-0f22-47d4-a438-e4d29b920e22",
-            "d304243a-5c3a-4ccc-b98b-93684b15fd83"
-          ],
-          "defaultValues" : {
-            "type" : "PropertySet",
-            "propertySetItems" : [
-              "polygontype",
-              "debris"
-            ]
-          }
-        },
-        {
-          "type" : "CIMFeatureTemplate",
           "name" : "Formation",
           "tags" : "Polygon",
           "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
@@ -118,24 +184,6 @@
             "propertySetItems" : [
               "polygontype",
               "formation"
-            ]
-          }
-        },
-        {
-          "type" : "CIMFeatureTemplate",
-          "name" : "Cave Outline",
-          "tags" : "Polygon",
-          "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
-          "toolFilter" : [
-            "6c6970a7-5ca9-448c-9c7d-0d716cd2ac64",
-            "a281e635-0f22-47d4-a438-e4d29b920e22",
-            "d304243a-5c3a-4ccc-b98b-93684b15fd83"
-          ],
-          "defaultValues" : {
-            "type" : "PropertySet",
-            "propertySetItems" : [
-              "polygontype",
-              "outline"
             ]
           }
         },
@@ -159,6 +207,24 @@
         },
         {
           "type" : "CIMFeatureTemplate",
+          "name" : "Organic Debris",
+          "tags" : "Polygon",
+          "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
+          "toolFilter" : [
+            "6c6970a7-5ca9-448c-9c7d-0d716cd2ac64",
+            "a281e635-0f22-47d4-a438-e4d29b920e22",
+            "d304243a-5c3a-4ccc-b98b-93684b15fd83"
+          ],
+          "defaultValues" : {
+            "type" : "PropertySet",
+            "propertySetItems" : [
+              "polygontype",
+              "debris"
+            ]
+          }
+        },
+        {
+          "type" : "CIMFeatureTemplate",
           "name" : "Pillar",
           "tags" : "Polygon",
           "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
@@ -172,6 +238,24 @@
             "propertySetItems" : [
               "polygontype",
               "pillar"
+            ]
+          }
+        },
+        {
+          "type" : "CIMFeatureTemplate",
+          "name" : "Rock",
+          "tags" : "Polygon",
+          "toolProgID" : "8f79967b-66a0-4a1c-b884-f44bc7e26921",
+          "toolFilter" : [
+            "6c6970a7-5ca9-448c-9c7d-0d716cd2ac64",
+            "a281e635-0f22-47d4-a438-e4d29b920e22",
+            "d304243a-5c3a-4ccc-b98b-93684b15fd83"
+          ],
+          "defaultValues" : {
+            "type" : "PropertySet",
+            "propertySetItems" : [
+              "polygontype",
+              "blocks"
             ]
           }
         },
@@ -496,7 +580,7 @@
             "classes" : [
               {
                 "type" : "CIMUniqueValueClass",
-                "label" : "Rock",
+                "label" : "Cave Outline",
                 "patch" : "Default",
                 "symbol" : {
                   "type" : "CIMSymbolReference",
@@ -504,32 +588,14 @@
                     "type" : "CIMPolygonSymbol",
                     "symbolLayers" : [
                       {
-                        "type" : "CIMSolidStroke",
-                        "enable" : true,
-                        "capStyle" : "Round",
-                        "joinStyle" : "Round",
-                        "lineStyle3D" : "Strip",
-                        "miterLimit" : 10,
-                        "width" : 0.40000000000000002,
-                        "color" : {
-                          "type" : "CIMRGBColor",
-                          "values" : [
-                            110,
-                            110,
-                            110,
-                            100
-                          ]
-                        }
-                      },
-                      {
                         "type" : "CIMSolidFill",
                         "enable" : true,
                         "color" : {
                           "type" : "CIMRGBColor",
                           "values" : [
-                            225,
-                            225,
-                            225,
+                            230,
+                            152,
+                            0,
                             100
                           ]
                         }
@@ -541,7 +607,7 @@
                   {
                     "type" : "CIMUniqueValue",
                     "fieldValues" : [
-                      "blocks"
+                      "outline"
                     ]
                   }
                 ],
@@ -720,6 +786,185 @@
                     "type" : "CIMUniqueValue",
                     "fieldValues" : [
                       "clay"
+                    ]
+                  }
+                ],
+                "visible" : true
+              },
+              {
+                "type" : "CIMUniqueValueClass",
+                "label" : "Formation",
+                "patch" : "Default",
+                "symbol" : {
+                  "type" : "CIMSymbolReference",
+                  "symbol" : {
+                    "type" : "CIMPolygonSymbol",
+                    "symbolLayers" : [
+                      {
+                        "type" : "CIMSolidStroke",
+                        "enable" : true,
+                        "capStyle" : "Round",
+                        "joinStyle" : "Round",
+                        "lineStyle3D" : "Strip",
+                        "miterLimit" : 10,
+                        "width" : 0.40000000000000002,
+                        "color" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            130,
+                            130,
+                            130,
+                            100
+                          ]
+                        }
+                      },
+                      {
+                        "type" : "CIMSolidFill",
+                        "enable" : true,
+                        "color" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            255,
+                            255,
+                            190,
+                            100
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "values" : [
+                  {
+                    "type" : "CIMUniqueValue",
+                    "fieldValues" : [
+                      "formation"
+                    ]
+                  }
+                ],
+                "visible" : true
+              },
+              {
+                "type" : "CIMUniqueValueClass",
+                "label" : "Gravel",
+                "patch" : "Default",
+                "symbol" : {
+                  "type" : "CIMSymbolReference",
+                  "symbol" : {
+                    "type" : "CIMPolygonSymbol",
+                    "symbolLayers" : [
+                      {
+                        "type" : "CIMSolidStroke",
+                        "enable" : false,
+                        "capStyle" : "Round",
+                        "joinStyle" : "Round",
+                        "lineStyle3D" : "Strip",
+                        "miterLimit" : 10,
+                        "width" : 0.5,
+                        "color" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            180,
+                            215,
+                            158,
+                            100
+                          ]
+                        }
+                      },
+                      {
+                        "type" : "CIMVectorMarker",
+                        "enable" : true,
+                        "anchorPointUnits" : "Relative",
+                        "dominantSizeAxis3D" : "Y",
+                        "size" : 4,
+                        "billboardMode3D" : "FaceNearPlane",
+                        "markerPlacement" : {
+                          "type" : "CIMMarkerPlacementInsidePolygon",
+                          "gridType" : "Fixed",
+                          "randomness" : 100,
+                          "seed" : 13,
+                          "stepX" : 6,
+                          "stepY" : 7,
+                          "clipping" : "ClipAtBoundary"
+                        },
+                        "frame" : {
+                          "xmin" : -5,
+                          "ymin" : -5,
+                          "xmax" : 5,
+                          "ymax" : 5
+                        },
+                        "markerGraphics" : [
+                          {
+                            "type" : "CIMMarkerGraphic",
+                            "geometry" : {
+                              "curveRings" : [
+                                [
+                                  [
+                                    0,
+                                    5
+                                  ],
+                                  {
+                                    "a" : [
+                                      [
+                                        0,
+                                        5
+                                      ],
+                                      [
+                                        2.454975659144371e-15,
+                                        0
+                                      ],
+                                      0,
+                                      1
+                                    ]
+                                  }
+                                ]
+                              ]
+                            },
+                            "symbol" : {
+                              "type" : "CIMPolygonSymbol",
+                              "symbolLayers" : [
+                                {
+                                  "type" : "CIMSolidFill",
+                                  "enable" : true,
+                                  "color" : {
+                                    "type" : "CIMRGBColor",
+                                    "values" : [
+                                      156,
+                                      156,
+                                      156,
+                                      100
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "scaleSymbolsProportionally" : true,
+                        "respectFrame" : true
+                      },
+                      {
+                        "type" : "CIMSolidFill",
+                        "enable" : false,
+                        "colorLocked" : true,
+                        "color" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            255,
+                            255,
+                            255,
+                            100
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "values" : [
+                  {
+                    "type" : "CIMUniqueValue",
+                    "fieldValues" : [
+                      "pebbles"
                     ]
                   }
                 ],
@@ -22049,220 +22294,6 @@
               },
               {
                 "type" : "CIMUniqueValueClass",
-                "label" : "Formation",
-                "patch" : "Default",
-                "symbol" : {
-                  "type" : "CIMSymbolReference",
-                  "symbol" : {
-                    "type" : "CIMPolygonSymbol",
-                    "symbolLayers" : [
-                      {
-                        "type" : "CIMSolidStroke",
-                        "enable" : true,
-                        "capStyle" : "Round",
-                        "joinStyle" : "Round",
-                        "lineStyle3D" : "Strip",
-                        "miterLimit" : 10,
-                        "width" : 0.40000000000000002,
-                        "color" : {
-                          "type" : "CIMRGBColor",
-                          "values" : [
-                            130,
-                            130,
-                            130,
-                            100
-                          ]
-                        }
-                      },
-                      {
-                        "type" : "CIMSolidFill",
-                        "enable" : true,
-                        "color" : {
-                          "type" : "CIMRGBColor",
-                          "values" : [
-                            255,
-                            255,
-                            190,
-                            100
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                "values" : [
-                  {
-                    "type" : "CIMUniqueValue",
-                    "fieldValues" : [
-                      "formation"
-                    ]
-                  }
-                ],
-                "visible" : true
-              },
-              {
-                "type" : "CIMUniqueValueClass",
-                "label" : "Cave Outline",
-                "patch" : "Default",
-                "symbol" : {
-                  "type" : "CIMSymbolReference",
-                  "symbol" : {
-                    "type" : "CIMPolygonSymbol",
-                    "symbolLayers" : [
-                      {
-                        "type" : "CIMSolidFill",
-                        "enable" : true,
-                        "color" : {
-                          "type" : "CIMRGBColor",
-                          "values" : [
-                            230,
-                            152,
-                            0,
-                            100
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                "values" : [
-                  {
-                    "type" : "CIMUniqueValue",
-                    "fieldValues" : [
-                      "outline"
-                    ]
-                  }
-                ],
-                "visible" : true
-              },
-              {
-                "type" : "CIMUniqueValueClass",
-                "label" : "Gravel",
-                "patch" : "Default",
-                "symbol" : {
-                  "type" : "CIMSymbolReference",
-                  "symbol" : {
-                    "type" : "CIMPolygonSymbol",
-                    "symbolLayers" : [
-                      {
-                        "type" : "CIMSolidStroke",
-                        "enable" : false,
-                        "capStyle" : "Round",
-                        "joinStyle" : "Round",
-                        "lineStyle3D" : "Strip",
-                        "miterLimit" : 10,
-                        "width" : 0.5,
-                        "color" : {
-                          "type" : "CIMRGBColor",
-                          "values" : [
-                            180,
-                            215,
-                            158,
-                            100
-                          ]
-                        }
-                      },
-                      {
-                        "type" : "CIMVectorMarker",
-                        "enable" : true,
-                        "anchorPointUnits" : "Relative",
-                        "dominantSizeAxis3D" : "Y",
-                        "size" : 4,
-                        "billboardMode3D" : "FaceNearPlane",
-                        "markerPlacement" : {
-                          "type" : "CIMMarkerPlacementInsidePolygon",
-                          "gridType" : "Fixed",
-                          "randomness" : 100,
-                          "seed" : 13,
-                          "stepX" : 6,
-                          "stepY" : 7,
-                          "clipping" : "ClipAtBoundary"
-                        },
-                        "frame" : {
-                          "xmin" : -5,
-                          "ymin" : -5,
-                          "xmax" : 5,
-                          "ymax" : 5
-                        },
-                        "markerGraphics" : [
-                          {
-                            "type" : "CIMMarkerGraphic",
-                            "geometry" : {
-                              "curveRings" : [
-                                [
-                                  [
-                                    0,
-                                    5
-                                  ],
-                                  {
-                                    "a" : [
-                                      [
-                                        0,
-                                        5
-                                      ],
-                                      [
-                                        1.3446038970933378e-15,
-                                        0
-                                      ],
-                                      0,
-                                      1
-                                    ]
-                                  }
-                                ]
-                              ]
-                            },
-                            "symbol" : {
-                              "type" : "CIMPolygonSymbol",
-                              "symbolLayers" : [
-                                {
-                                  "type" : "CIMSolidFill",
-                                  "enable" : true,
-                                  "color" : {
-                                    "type" : "CIMRGBColor",
-                                    "values" : [
-                                      156,
-                                      156,
-                                      156,
-                                      100
-                                    ]
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ],
-                        "scaleSymbolsProportionally" : true,
-                        "respectFrame" : true
-                      },
-                      {
-                        "type" : "CIMSolidFill",
-                        "enable" : false,
-                        "colorLocked" : true,
-                        "color" : {
-                          "type" : "CIMRGBColor",
-                          "values" : [
-                            255,
-                            255,
-                            255,
-                            100
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                "values" : [
-                  {
-                    "type" : "CIMUniqueValue",
-                    "fieldValues" : [
-                      "pebbles"
-                    ]
-                  }
-                ],
-                "visible" : true
-              },
-              {
-                "type" : "CIMUniqueValueClass",
                 "label" : "Pillar",
                 "patch" : "Default",
                 "symbol" : {
@@ -22357,6 +22388,59 @@
                     "type" : "CIMUniqueValue",
                     "fieldValues" : [
                       "pillar"
+                    ]
+                  }
+                ],
+                "visible" : true
+              },
+              {
+                "type" : "CIMUniqueValueClass",
+                "label" : "Rock",
+                "patch" : "Default",
+                "symbol" : {
+                  "type" : "CIMSymbolReference",
+                  "symbol" : {
+                    "type" : "CIMPolygonSymbol",
+                    "symbolLayers" : [
+                      {
+                        "type" : "CIMSolidStroke",
+                        "enable" : true,
+                        "capStyle" : "Round",
+                        "joinStyle" : "Round",
+                        "lineStyle3D" : "Strip",
+                        "miterLimit" : 10,
+                        "width" : 0.40000000000000002,
+                        "color" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            110,
+                            110,
+                            110,
+                            100
+                          ]
+                        }
+                      },
+                      {
+                        "type" : "CIMSolidFill",
+                        "enable" : true,
+                        "color" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            225,
+                            225,
+                            225,
+                            100
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "values" : [
+                  {
+                    "type" : "CIMUniqueValue",
+                    "fieldValues" : [
+                      "blocks"
                     ]
                   }
                 ],
@@ -38801,31 +38885,14 @@
         "polygonSymbolColorTarget" : "Fill"
       },
       "scaleSymbols" : true,
-      "snappable" : true,
-      "symbolLayerDrawing" : {
-        "type" : "CIMSymbolLayerDrawing"
-      }
+      "snappable" : true
     }
   ],
-  "elevationSurfaces" : [
+  "binaryReferences" : [
     {
-      "type" : "CIMMapElevationSurface",
-      "elevationMode" : "BaseGlobeSurface",
-      "name" : "Ground",
-      "verticalExaggeration" : 1,
-      "mapElevationID" : "{04A5D854-D8F9-4318-8248-45689A9A924C}",
-      "color" : {
-        "type" : "CIMRGBColor",
-        "values" : [
-          255,
-          255,
-          255,
-          100
-        ]
-      },
-      "surfaceTINShadingMode" : "Smooth",
-      "visibility" : true,
-      "expanded" : true
+      "type" : "CIMBinaryReference",
+      "uRI" : "CIMPATH=Metadata/4412f787f9283f7d9579b2ea354efc1e.xml",
+      "data" : "<?xml version=\"1.0\"?>\r\n<metadata xml:lang=\"en\"><Esri><CreaDate>20240224</CreaDate><CreaTime>17050400</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce></Esri></metadata>\r\n"
     }
   ],
   "rGBColorProfile" : "sRGB IEC61966-2.1",
