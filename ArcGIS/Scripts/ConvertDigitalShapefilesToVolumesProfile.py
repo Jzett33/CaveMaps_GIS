@@ -5,12 +5,13 @@ Developed using Therion 5.5.3 and ArcGIS Pro 2.9.5
 
 There is a known difference between versions 2.8 and 2.9 where the Spatial Outlier Detection
     tool generates a field called NTHDIST instead of LOF which is used in this script
+ArcGIS Pro version 3.0 replaced teh Add Geometry Attributes with Calculate Geometry Attributes
 
 Jon R Zetterberg
 jzett33@gmail.com
 NSS67484
 
-Last modified: 20221113
+Last modified: 20240223
 
 Input 0 is a folder containing the output Therion shots3d and stations3d shapefiles.
 Input 1 is the coordinate reference system which the shapefiles reference.
@@ -41,7 +42,7 @@ createLeads = arcpy.GetParameterAsText(5) #Should a leads layer be generated (Ye
 thFolder = "C:\\CaveName\\"
 textfile = "C:\\TherionProfile.txt"
 crs = arcpy.SpatialReference(26916)
-createProfile = "Yes"
+createProfile = "No"
 newAppend = "Yes"
 createLeads = "No"
 
@@ -70,9 +71,10 @@ stations = stationsFC
 #Format survey data
 arcpy.AddField_management(stations, "FromSta", "TEXT")
 arcpy.CalculateField_management(stations, "FromSta", '!_NAME!.replace(".", "_")', "PYTHON3")
-arcpy.AddGeometryAttributes_management(stations, "POINT_X_Y_Z_M")
-arcpy.DeleteField_management(stations, ["POINT_M"])
-arcpy.AddGeometryAttributes_management(shots, "LENGTH_3D", "METERS")
+arcpy.AddGeometryAttributes_management(stations, "POINT_X_Y_Z_M")   #Pro 2.9
+arcpy.DeleteField_management(stations, ["POINT_M"])                 #Pro 2.9
+#arcpy.management.CalculateGeometryAttributes(stations, [[              #Pro 3.0
+#arcpy.AddGeometryAttributes_management(shots, "LENGTH_3D", "METERS")   #Pro 3.0
 
 #Create Feature Datasets to better organize data
 print("Creating Feature Datasets to organize data")
@@ -181,45 +183,51 @@ if newAppend == "Yes":
     arcpy.CreateDomain_management(fileGDB, "LineTypes", "Various symbology types for lines.", "TEXT", "CODED", "DUPLICATE")
     arcpy.CreateDomain_management(fileGDB, "PolygonTypes", "Various symbology types for polygons.", "TEXT", "CODED", "DUPLICATE")
     arcpy.CreateDomain_management(fileGDB, "TrueFalse", "A simple true or false domain.", "TEXT", "CODED", "DUPLICATE")
-    domDict1 = {"30":"Flowstone", "31":"Stalagmite", "32":"Stalactite", "33":"Column",
-                "34":"Soda Straw", "20":"Drop", "21":"Ceiling", "41":"Rock",
-                "40":"Slope", "10":"Datum", "11":"Tree", "12":"XS Label",
-                "50":"Tire", "51":"Trash", "52":"Organic Debris", "53":"Bolt",
-                "13":"Above Datum", "14":"Below Datum", "22":"Air over Water"}
+    arcpy.CreateDomain_management(fileGDB, "RotationDegree", "Values which point symbology can be rotated by.", "SHORT", "RANGE")
+    domDict1 = {"anchor":"Anchor","archeo":"Archeology","blocks":"Breakdown","clay":"Clay","continuation":"Unknown",
+                "danger":"Danger","debris":"Debris","dig":"Dig","entrance":"Datum","guano":"Guano","gypsum":"Gypsum",
+                "helictite":"Helictite","label":"Note","moonmilk":"Flowstone","mud":"Mud","paleo":"Paleontology",
+                "pebbles":"Pebbles","pillar":"Column","popcorn":"Popcorn","root":"Root","sand":"Sand",
+                "soda-straw":"Soda Straw","stalactite":"Stalactite","stalagmite":"Stalagmite","user":"Ceiling Height",
+                "water-drop":"Water Drop","drop":"Drop Depth","slope":"Floor Slope","tree":"Tree","tire":"Tire",
+                "trash":"Trash","organics":"Organic Debris","above":"Above Datum","below":"Below Datum","airwater":"Air over Water"}
     for code in domDict1:        
         arcpy.AddCodedValueToDomain_management(fileGDB, "PointTypes", code, domDict1[code])
-    domDict2 = {"12":"Ceiling Drop", "13":"Floor Drop", "10":"Wall", "30":"Flowing Water",
-                "11":"Approximate Wall", "14":"Lower Level", "15":"Upper Level", "20":"XS Location"}
+    domDict2 = {"border":"Border","ceiling-meander":"Ceiling Channel","chimney":"Ceiling Drop","floor-meander":"Floor Channel"
+                ,"pit":"Floor Drop","rock-border":"Rock","slope":"Floor Slope","user":"Other","wall":"Wall",
+                "wall blocks":"Breakdown Wall","wall presumed":"Approximate Wall","water-flow":"Flowing Water",
+                "section":"XS Location","lower":"Lower Level","upper":"Upper Level"}
     for code in domDict2:        
         arcpy.AddCodedValueToDomain_management(fileGDB, "LineTypes", code, domDict2[code])
-    domDict3 = {"10":"Cave Outline", "21":"Pillar", "30":"Rock", "40":"Water Pool",
-                "20":"Formation"}
+    domDict3 = {"blocks":"Rock","clay":"Clay Floor","debris":"Organic Debris","pebbles":"Gravel","sand":"Sand Floor",
+                "water":"Water Pool","outline":"Cave Outline","pillar":"Pillar","formation":"Formation"}
     for code in domDict3:        
         arcpy.AddCodedValueToDomain_management(fileGDB, "PolygonTypes", code, domDict3[code])
     domDict4 = {"1":"True", "0":"False"}
     for code in domDict4:
         arcpy.AddCodedValueToDomain_management(fileGDB, "TrueFalse", code, domDict4[code])
+    arcpy.SetValueForRangeDomain_management(fileGDB, "RotationDegree", 0, 359)
     #Generate cave feature templates to be used in map production
     arcpy.CreateFeatureDataset_management(fileGDB, "CaveFeatures", crs)
     caveFeat = os.path.join(fileGDB, "CaveFeatures")
     #Generate point, line, and polygon feature classes which will hold map features
     caveFeatPoints = arcpy.CreateFeatureclass_management(caveFeat, "Points", "POINT")
     arcpy.AddField_management(caveFeatPoints, "PointType", "TEXT", "", "", "50", "Point Type", "", "", "PointTypes")
-    arcpy.AddField_management(caveFeatPoints, "Level", "SHORT")
+    arcpy.AddField_management(caveFeatPoints, "Level", "SHORT", "", "", "", "", "", "", "RotationDegree")
     arcpy.AddField_management(caveFeatPoints, "Rotation", "SHORT")
     arcpy.AddField_management(caveFeatPoints, "Label", "TEXT", "", "", "50")
     arcpy.AddField_management(caveFeatPoints, "Shown", "TEXT", "", "", "5", "Point Type", "", "", "TrueFalse")
     caveFeatLines = arcpy.CreateFeatureclass_management(caveFeat, "Lines", "POLYLINE")
-    arcpy.AddField_management(caveFeatLines, "LineType", "TEXT", "", "", "50", "Point Type", "", "", "LineTypes")
+    arcpy.AddField_management(caveFeatLines, "LineType", "TEXT", "", "", "50", "Line Type", "", "", "LineTypes")
     arcpy.AddField_management(caveFeatLines, "Level", "SHORT")
     arcpy.AddField_management(caveFeatLines, "Label", "TEXT", "", "", "50")
-    arcpy.AddField_management(caveFeatLines, "Shown", "TEXT", "", "", "5", "Point Type", "", "", "TrueFalse")
+    arcpy.AddField_management(caveFeatLines, "Shown", "TEXT", "", "", "5", "Line Type", "", "", "TrueFalse")
     caveFeatLines = arcpy.CreateFeatureclass_management(caveFeat, "CenterLine", "POLYLINE")
     arcpy.AddField_management(caveFeatLines, "Level", "SHORT")
     caveFeatPolygons = arcpy.CreateFeatureclass_management(caveFeat, "Polygons", "POLYGON")
-    arcpy.AddField_management(caveFeatPolygons, "PolygonType", "TEXT", "", "", "50", "Point Type", "", "", "PolygonTypes")
+    arcpy.AddField_management(caveFeatPolygons, "PolygonType", "TEXT", "", "", "50", "Polygon Type", "", "", "PolygonTypes")
     arcpy.AddField_management(caveFeatPolygons, "Level", "SHORT")
-    arcpy.AddField_management(caveFeatPolygons, "Shown", "TEXT", "", "", "5", "Point Type", "", "", "TrueFalse")
+    arcpy.AddField_management(caveFeatPolygons, "Shown", "TEXT", "", "", "5", "Polygon Type", "", "", "TrueFalse")
     print("Mapping feature classes creation completed")
     #Create leads layer
     if createLeads == "YES":
@@ -233,7 +241,7 @@ if newAppend == "Yes":
     if createLeads == "Yes":
         print("Generating Leads feature class")
         arcpy.CreateDomain_management(fileGDB, "LeadStatus", "Options for the status of a lead.", "TEXT", "CODED", "DUPLICATE")
-        domDict5 = {"1":"Open", "2":"Resolved"}
+        domDict5 = {"Open":"Open", "Resolved":"Resolved"}
         for code in domDict5:
             arcpy.AddCodedValueToDomain_management(fileGDB, "LeadStatus", code, domDict5[code])
         caveFeatLeads = arcpy.CreateFeatureclass_management(caveFeat, "Leads", "POINT")
