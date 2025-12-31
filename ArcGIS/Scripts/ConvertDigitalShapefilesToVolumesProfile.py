@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Convert Therion Export Shapefiles to Volumes using ArcGIS Pro
-Developed using Therion 5.5.3 and ArcGIS Pro 3.4.2
-
-There is a known difference between versions 2.8 and 2.9 where the Spatial Outlier Detection
-    tool generates a field called NTHDIST instead of LOF which is used in this script
-ArcGIS Pro version 3.0 replaced teh Add Geometry Attributes with Calculate Geometry Attributes
+Developed using Therion 5.5.3 and ArcGIS Pro 3.6.0
 
 Jon R Zetterberg
 jzett33@gmail.com
 NSS67484
 
-Last modified: 20250222
+Last modified: 20251230
 
 Input 0 is a folder containing the output Therion shots3d and stations3d shapefiles.
 Input 1 is the coordinate reference system which the shapefiles reference.
@@ -39,12 +35,6 @@ createProfile = arcpy.GetParameterAsText(3) #Does a profile need to be processed
 newAppend = arcpy.GetParameterAsText(4)#Do mapping layers need to be created (Yes or No)
 createLeads = arcpy.GetParameterAsText(5) #Should a leads layer be generated (Yes or No)
 """
-thFolder = "C:\\CaveName\\"
-textfile = "C:\\TherionProfile.txt"
-crs = arcpy.SpatialReference(26916)
-createProfile = "No"
-newAppend = "Yes"
-createLeads = "No"
 
 arcpy.env.workspace = thFolder
 arcpy.env.overwriteOutput = True
@@ -71,9 +61,6 @@ stations = stationsFC
 #Format survey data
 arcpy.AddField_management(stations, "FromSta", "TEXT")
 arcpy.CalculateField_management(stations, "FromSta", '!_NAME!.replace(".", "_")', "PYTHON3")
-#arcpy.AddGeometryAttributes_management(stations, "POINT_X_Y_Z_M")   #Pro 2.9
-#arcpy.DeleteField_management(stations, ["POINT_M"])                 #Pro 2.9
-#arcpy.AddGeometryAttributes_management(shots, "LENGTH;LENGTH_3D", "METERS")	#Pro 2.9
 arcpy.management.CalculateGeometryAttributes(stations, [["X", "POINT_X"], ["Y", "POINT_Y"], ["Z", "POINT_Z"]])  #Pro 3.0+
 arcpy.AddGeometryAttributes_management(shots, "LENGTH_3D", "METERS")   #Pro 3.0+
 
@@ -81,15 +68,15 @@ arcpy.AddGeometryAttributes_management(shots, "LENGTH_3D", "METERS")   #Pro 3.0+
 print("Creating Feature Datasets to organize data")
 arcpy.CreateFeatureDataset_management(fileGDB, "TempPoints", crs)
 tPnts = os.path.join(fileGDB, "TempPoints")
-arcpy.CreateFeatureDataset_management(fileGDB, "SmoothedVolume", crs)
-sVols = os.path.join(fileGDB, "SmoothedVolume")
-arcpy.CreateFeatureDataset_management(fileGDB, "TempVolumes", crs)
-tVols = os.path.join(fileGDB, "TempVolumes")
+arcpy.CreateFeatureDataset_management(fileGDB, "CaveModels", crs)
+sVols = os.path.join(fileGDB, "CaveModels")
 mergedPoints = arcpy.CreateFeatureclass_management(tPnts, "MergedPoints", "POINT", stations, "", "ENABLED")
 arcpy.CreateFeatureDataset_management(fileGDB, "TempSplays", crs)
 tSplays = os.path.join(fileGDB, "TempSplays")
 arcpy.CreateFeatureDataset_management(fileGDB, "LongShotCheck", crs)
 longSC = os.path.join(fileGDB, "LongShotCheck")
+arcpy.CreateFeatureDataset_management(fileGDB, "TempLegs", crs)
+tLegs = os.path.join(fileGDB, "TempLegs")
 
 #Check for long shots, delete if any are found
 print("Checking for longshots")
@@ -110,7 +97,7 @@ longCount = arcpy.GetCount_management(excldedShots)
 if str(longCount) == "0":
 	arcpy.Delete_management(excldedShots)
 
-#Seperate splay shots out from the center line
+#Seperate splays out from the legs
 print("Attributing splay shots")
 splays = arcpy.FeatureClassToFeatureClass_conversion(shots, fileGDB, "SplayShots", '"_SPLAY" = 1')
 arcpy.SplitByAttributes_analysis(splays, tSplays, "_From")
@@ -145,14 +132,14 @@ tLenTable = arcpy.analysis.Statistics(legOnly, "ShotsStats_TrueLen", [["LENGTH_3
 cursor1 = arcpy.SearchCursor(hLenTable)
 for row1 in cursor1:
         hft = round((row1.SUM_Shape_Length)*3.28084)
-        print("Horizontal Length: {0} meters or {1} feet".format(round(row1.SUM_Shape_Length), hft))
+        print("Horizontal Length: {1} feet, {0} meters".format(round(row1.SUM_Shape_Length), hft))
 del cursor1, row1
 cursor2 = arcpy.SearchCursor(tLenTable)
 for row2 in cursor2:
         tft = round((row2.SUM_LENGTH_3D)*3.28084)
-        print("Surveyed Length: {0} meters or {1} feet".format(round(row2.SUM_LENGTH_3D), tft))
+        print("Surveyed Length: {1} feet, {0} meters".format(round(row2.SUM_LENGTH_3D), tft))
 del cursor2, row2
-arcpy.Delete_management(legOnly)
+
 #Caclulate vertical extent
 arcpy.management.CalculateGeometryAttributes(mergedPoints, [["X", "POINT_X"], ["Y", "POINT_Y"], ["Z", "POINT_Z"]])
 staTable = arcpy.Statistics_analysis(mergedPoints, "StationStats", [["Z", "MEAN"], ["Z", "MIN"], ["Z", "MAX"],["Z", "RANGE"],
@@ -160,9 +147,10 @@ staTable = arcpy.Statistics_analysis(mergedPoints, "StationStats", [["Z", "MEAN"
 cursor3 = arcpy.SearchCursor(staTable)
 for row3 in cursor3:
         veft = round((row3.RANGE_Z)*3.28084)
-        print("Vertical Extent: {0} meters or {1} feet".format(round(row3.RANGE_Z), veft))
+        print("Vertical Extent: {1} feet, {0} meters".format(round(row3.RANGE_Z), veft))
 del cursor3, row3
 #Create and populate cave summary table
+print("Calculating additional statistics for the survey.")
 stats = arcpy.management.CreateTable(fileGDB, "CaveStatistics1")
 #a=true b=horizontal c=station d=derived
 arcpy.management.AddFields(stats, [["SurveyLengthM", "DOUBLE", "Survey Length Meters"],         #1      a
@@ -248,31 +236,28 @@ arcpy.management.DeleteField(jStaz, ["FromSta", "OBJECTID_1", "FromSta_1", "COUN
 
 #Generate 3D passage model
 print("Generating 3D passage models")
-arcpy.CalculateField_management(dissolvedPnts, "StationNumber", '!OBJECTID!', "PYTHON3", "", "SHORT")
-arcpy.CalculateField_management(dissolvedPnts, "Group1", '!StaInt! - ( !StaInt! % 2)', "PYTHON3", "", "SHORT")
-arcpy.CalculateField_management(dissolvedPnts, "Group2", '!StaInt! + ( !StaInt! % 2)', "PYTHON3", "", "SHORT")
-
-vol1Path = fr"{tVols}\Group1Vols"
-vol2Path = fr"{tVols}\Group2Vols"
-arcpy.MinimumBoundingVolume_3d(dissolvedPnts, 'Shape.Z', vol1Path, "CONVEX_HULL", "LIST", "Group1")
-arcpy.MinimumBoundingVolume_3d(dissolvedPnts, 'Shape.Z', vol2Path, "CONVEX_HULL", "LIST", "Group2")
-
-mergePath = fr"{sVols}\AllVolumes"
-mergePath2 = fr"{sVols}\AllVolumes_Simplified"
-arcpy.Merge_management([vol1Path, vol2Path], mergePath)
-arcpy.MinimumBoundingVolume_3d(dissolvedPnts, 'Shape.Z', mergePath2, "CONVEX_HULL", "LIST", "StaInt")
-
-arcpy.Delete_management([tPnts, tVols, tSplays, splays, longSC])
+#This variation uses the splays intersecting each leg shot
+#The model typically overexaggerates the cave by cutting off sharp bends
+caveModel = arcpy.management.CreateFeatureclass(sVols, "CaveModel", "MULTIPATCH")
+arcpy.AddField_management(legOnly, "LegID", "TEXT")
+arcpy.management.CalculateField(legOnly, "LegID", '"L"+str(!OBJECTID!)', "PYTHON3")
+arcpy.analysis.SplitByAttributes(legOnly, tLegs, 'LegID')
+legList = arcpy.ListFeatureClasses("", "", "TempLegs")
+arcpy.MakeFeatureLayer_management(splays, "splaysLYR")
+for leg in legList:
+        arcpy.SelectLayerByLocation_management("splaysLYR", "INTERSECT_3D", leg)
+        selVol = arcpy.MinimumBoundingVolume_3d("splaysLYR",'Shape.Z', "VolChunk", "CONVEX_HULL", "ALL")
+        arcpy.Append_management(selVol, caveModel, "NO_TEST")
+del leg, legList
+#This variation uses the splays intersecting each station
+#The model typically looks choppy since splays do not overlap enough
+mergePath = fr"{sVols}\CaveModel_FromSplaysOnly"
+arcpy.MinimumBoundingVolume_3d(dissolvedPnts, 'Shape.Z', mergePath, "CONVEX_HULL", "LIST", "StaInt")
+#Clean up working files
+arcpy.Delete_management([tPnts, tSplays, tLegs, splays, longSC, legOnly, selVol])
 
 #Create profile survey, ceiling, and floor lines
-if createProfile == "YES":
-    createProfile = "Yes"
-if createProfile == "yes":
-    createProfile = "Yes"
-if createProfile == "y":
-    createProfile = "Yes"
-if createProfile == "Y":
-    createProfile = "Yes"
+#This section is not often used anymore.
 if createProfile == "Yes":
     print("Generating Profile Survey, Ceiling, and Floor Lines")
     arcpy.CreateFeatureDataset_management(fileGDB, "Profile", crs)
@@ -284,14 +269,6 @@ if createProfile == "Yes":
     ProLn = arcpy.PointsToLine_management(ProSurveyPnts, "ProfileSurveyLine", "Line", "Sort")
 
 #Create additional features in the geodatabase to be used as templates in map production
-if newAppend == "YES":
-    newAppend = "Yes"
-if newAppend == "yes":
-    newAppend = "Yes"
-if newAppend == "y":
-    newAppend = "Yes"
-if newAppend == "Y":
-    newAppend = "Yes"
 if newAppend == "Yes":
     print("Mapping feature classes creation started")
     #Generate domains that will be used in map production
@@ -333,19 +310,22 @@ if newAppend == "Yes":
     #Generate point, line, and polygon feature classes which will hold map features
     caveFeatPoints = arcpy.CreateFeatureclass_management(caveFeat, "Points", "POINT")
     arcpy.AddField_management(caveFeatPoints, "PointType", "TEXT", "", "", "50", "Point Type", "", "", "PointTypes")
-    arcpy.AddField_management(caveFeatPoints, "Level", "SHORT", "", "", "", "", "", "", "RotationDegree")
     arcpy.AddField_management(caveFeatPoints, "Rotation", "SHORT")
     arcpy.AddField_management(caveFeatPoints, "Label", "TEXT", "", "", "50")
+    arcpy.AddField_management(caveFeatPoints, "Level", "SHORT", "", "", "", "", "", "", "RotationDegree")
     arcpy.AddField_management(caveFeatPoints, "Shown", "TEXT", "", "", "5", "", "", "", "TrueFalse")
     arcpy.AddField_management(caveFeatPoints, "View", "TEXT", "", "", "10", "", "", "", "ViewOptions")
     caveFeatLines = arcpy.CreateFeatureclass_management(caveFeat, "Lines", "POLYLINE")
     arcpy.AddField_management(caveFeatLines, "LineType", "TEXT", "", "", "50", "Line Type", "", "", "LineTypes")
     arcpy.AddField_management(caveFeatLines, "Level", "SHORT")
-    arcpy.AddField_management(caveFeatLines, "Label", "TEXT", "", "", "50")
+    #arcpy.AddField_management(caveFeatLines, "Label", "TEXT", "", "", "50")
     arcpy.AddField_management(caveFeatLines, "Shown", "TEXT", "", "", "5", "", "", "", "TrueFalse")
     arcpy.AddField_management(caveFeatLines, "View", "TEXT", "", "", "10", "", "", "", "ViewOptions")
-    caveFeatLines = arcpy.CreateFeatureclass_management(caveFeat, "CenterLine", "POLYLINE")
-    arcpy.AddField_management(caveFeatLines, "Level", "SHORT")
+    #caveFeatLines = arcpy.CreateFeatureclass_management(caveFeat, "CenterLine", "POLYLINE")
+    caveOutline = arcpy.CreateFeatureclass_management(caveFeat, "CaveOutline", "POLYGON")
+    arcpy.AddField_management(caveOutline, "Level", "SHORT")
+    arcpy.AddField_management(caveOutline, "Shown", "TEXT", "", "", "5", "", "", "", "TrueFalse")
+    arcpy.AddField_management(caveOutline, "View", "TEXT", "", "", "10", "", "", "", "ViewOptions")
     caveFeatPolygons = arcpy.CreateFeatureclass_management(caveFeat, "Polygons", "POLYGON")
     arcpy.AddField_management(caveFeatPolygons, "PolygonType", "TEXT", "", "", "50", "Polygon Type", "", "", "PolygonTypes")
     arcpy.AddField_management(caveFeatPolygons, "Level", "SHORT")
@@ -353,14 +333,6 @@ if newAppend == "Yes":
     arcpy.AddField_management(caveFeatPolygons, "View", "TEXT", "", "", "10", "", "", "", "ViewOptions")
     print("Mapping feature classes creation completed")
     #Create leads layer
-    if createLeads == "YES":
-        createLeads = "Yes"
-    if createLeads == "yes":
-        createLeads = "Yes"
-    if createLeads == "y":
-        createLeads = "Yes"
-    if createLeads == "Y":
-        createLeads = "Yes"
     if createLeads == "Yes":
         print("Generating Leads feature class")
         arcpy.CreateDomain_management(fileGDB, "LeadStatus", "Options for the status of a lead.", "TEXT", "CODED", "DUPLICATE")
