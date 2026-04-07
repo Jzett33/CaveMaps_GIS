@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Convert Therion Export Shapefiles to Volumes using ArcGIS Pro
-Developed using Therion 5.5.3 and ArcGIS Pro 3.6.0
+Developed using Therion 5.5.3 and ArcGIS Pro 3.6.2
 
 Jon R Zetterberg
 jzett33@gmail.com
