@@ -7,7 +7,7 @@ Jon R Zetterberg
 jzett33@gmail.com
 NSS67484
 
-Last modified: 20251230
+Last modified: 20260406
 
 Input 0 is a folder containing the output Therion shots3d and stations3d shapefiles.
 Input 1 is the coordinate reference system which the shapefiles reference.
@@ -34,6 +34,7 @@ crs = arcpy.GetParameterAsText(2)      #coordinate reference system that the The
 createProfile = arcpy.GetParameterAsText(3) #Does a profile need to be processed from the specified text file (Yes or No)
 newAppend = arcpy.GetParameterAsText(4)#Do mapping layers need to be created (Yes or No)
 createLeads = arcpy.GetParameterAsText(5) #Should a leads layer be generated (Yes or No)
+go3D = arcpy.GetParameterAsText(6) #Should a 3D model be generated (Yes or No)
 """
 
 arcpy.env.workspace = thFolder
@@ -129,16 +130,16 @@ tLenTable = arcpy.analysis.Statistics(legOnly, "ShotsStats_TrueLen", [["LENGTH_3
                                                                       ["LENGTH_3D", "MIN"], ["LENGTH_3D", "MAX"],
                                                                       ["LENGTH_3D", "RANGE"], ["LENGTH_3D", "STD"],
                                                                       ["LENGTH_3D", "MEDIAN"]])
-cursor1 = arcpy.SearchCursor(hLenTable)
-for row1 in cursor1:
-        hft = round((row1.SUM_Shape_Length)*3.28084)
-        print("Horizontal Length: {1} feet, {0} meters".format(round(row1.SUM_Shape_Length), hft))
-del cursor1, row1
 cursor2 = arcpy.SearchCursor(tLenTable)
 for row2 in cursor2:
         tft = round((row2.SUM_LENGTH_3D)*3.28084)
         print("Surveyed Length: {1} feet, {0} meters".format(round(row2.SUM_LENGTH_3D), tft))
 del cursor2, row2
+cursor1 = arcpy.SearchCursor(hLenTable)
+for row1 in cursor1:
+        hft = round((row1.SUM_Shape_Length)*3.28084)
+        print("Horizontal Length: {1} feet, {0} meters".format(round(row1.SUM_Shape_Length), hft))
+del cursor1, row1
 
 #Caclulate vertical extent
 arcpy.management.CalculateGeometryAttributes(mergedPoints, [["X", "POINT_X"], ["Y", "POINT_Y"], ["Z", "POINT_Z"]])
@@ -209,8 +210,7 @@ arcpy.management.CalculateField(cStats, "LowPointF", "!LowPointM!*3.28084", "PYT
 arcpy.management.CalculateField(cStats, "HighPointF", "!HighPointM!*3.28084", "PYTHON3")
 
 #Caclulate passage height at each station
-staSumm = arcpy.gapro.SummarizeAttributes(stations, "StationZSummary", ["FromSta"],
-                                          [["Z", "COUNT"], ["Z", "MEAN"], ["Z", "MIN"], ["Z", "MAX"], ["Z", "RANGE"]])
+staSumm = arcpy.analysis.Statistics(stations, "StationZSummary", "Z COUNT;Z MEAN;Z MIN;Z MAX;Z RANGE", "FromSta")
 outfc = os.path.join(surveyData, "Stations2")
 justStations = arcpy.conversion.ExportFeatures(
     in_features="AllStations",
@@ -235,26 +235,29 @@ arcpy.management.DeleteField(jStaz, ["FromSta", "OBJECTID_1", "FromSta_1", "COUN
                                      "MEAN_Z", "MIN_Z", "MAX_Z", "RANGE_Z"])
 
 #Generate 3D passage model
-print("Generating 3D passage models")
-#This variation uses the splays intersecting each leg shot
-#The model typically overexaggerates the cave by cutting off sharp bends
-caveModel = arcpy.management.CreateFeatureclass(sVols, "CaveModel", "MULTIPATCH")
-arcpy.AddField_management(legOnly, "LegID", "TEXT")
-arcpy.management.CalculateField(legOnly, "LegID", '"L"+str(!OBJECTID!)', "PYTHON3")
-arcpy.analysis.SplitByAttributes(legOnly, tLegs, 'LegID')
-legList = arcpy.ListFeatureClasses("", "", "TempLegs")
-arcpy.MakeFeatureLayer_management(splays, "splaysLYR")
-for leg in legList:
-        arcpy.SelectLayerByLocation_management("splaysLYR", "INTERSECT_3D", leg)
-        selVol = arcpy.MinimumBoundingVolume_3d("splaysLYR",'Shape.Z', "VolChunk", "CONVEX_HULL", "ALL")
-        arcpy.Append_management(selVol, caveModel, "NO_TEST")
-del leg, legList
-#This variation uses the splays intersecting each station
-#The model typically looks choppy since splays do not overlap enough
-mergePath = fr"{sVols}\CaveModel_FromSplaysOnly"
-arcpy.MinimumBoundingVolume_3d(dissolvedPnts, 'Shape.Z', mergePath, "CONVEX_HULL", "LIST", "StaInt")
-#Clean up working files
-arcpy.Delete_management([tPnts, tSplays, tLegs, splays, longSC, legOnly, selVol])
+#This process can take a long time to run
+if go3D == "Yes":
+        print("Generating 3D passage models")
+        #This variation uses the splays intersecting each leg shot
+        #The model typically overexaggerates the cave by cutting off sharp bends
+        caveModel = arcpy.management.CreateFeatureclass(sVols, "CaveModel", "MULTIPATCH")
+        arcpy.AddField_management(legOnly, "LegID", "TEXT")
+        arcpy.management.CalculateField(legOnly, "LegID", '"L"+str(!OBJECTID!)', "PYTHON3")
+        arcpy.analysis.SplitByAttributes(legOnly, tLegs, 'LegID')
+        legList = arcpy.ListFeatureClasses("", "", "TempLegs")
+        arcpy.MakeFeatureLayer_management(splays, "splaysLYR")
+        for leg in legList:
+                arcpy.SelectLayerByLocation_management("splaysLYR", "INTERSECT_3D", leg)
+                selVol = arcpy.MinimumBoundingVolume_3d("splaysLYR",'Shape.Z', "VolChunk", "CONVEX_HULL", "ALL")
+                arcpy.Append_management(selVol, caveModel, "NO_TEST")
+        del leg, legList
+        #This variation uses the splays intersecting each station
+        #The model typically looks choppy since splays do not overlap enough
+        mergePath = fr"{sVols}\CaveModel_FromSplaysOnly"
+        arcpy.MinimumBoundingVolume_3d(dissolvedPnts, 'Shape.Z', mergePath, "CONVEX_HULL", "LIST", "StaInt")
+        arcpy.Delete_management(selVol)
+        #Clean up working files
+arcpy.Delete_management([tPnts, tSplays, tLegs, splays, longSC, legOnly])
 
 #Create profile survey, ceiling, and floor lines
 #This section is not often used anymore.
@@ -289,8 +292,8 @@ if newAppend == "Yes":
         arcpy.AddCodedValueToDomain_management(fileGDB, "PointTypes", code, domDict1[code])
     domDict2 = {"border":"Border","ceiling-meander":"Ceiling Channel","chimney":"Ceiling Drop","floor-meander":"Floor Channel"
                 ,"pit":"Floor Drop","rock-border":"Rock","slope":"Floor Slope","user":"Other","wall":"Wall",
-                "wall blocks":"Breakdown Wall","wall presumed":"Approximate Wall","water-flow":"Flowing Water",
-                "section":"XS Location","lower":"Lower Level","upper":"Upper Level"}
+                "wall blocks":"Breakdown Wall","wall presumed":"Approximate Wall","wall clay":"Clay Wall","water-flow":"Flowing Water",
+                "water-int":"Intermittent Water","section":"XS Location","lower":"Lower Level","upper":"Upper Level"}
     for code in domDict2:        
         arcpy.AddCodedValueToDomain_management(fileGDB, "LineTypes", code, domDict2[code])
     domDict3 = {"blocks":"Rock","clay":"Clay Floor","debris":"Organic Debris","pebbles":"Gravel","sand":"Sand Floor",
@@ -349,5 +352,7 @@ if newAppend == "Yes":
         arcpy.AddField_management(caveFeatLeads, "Comment", "TEXT", "", "", "254")
         arcpy.AddField_management(caveFeatLeads, "Status", "TEXT", "", "", "50", "", "", "", "LeadStatus")
         print("Leads feature class creation completed")
+
+print("Processing completed, hope things go well moving forward.")
 
 print("Processing completed, hope things go well moving forward.")
